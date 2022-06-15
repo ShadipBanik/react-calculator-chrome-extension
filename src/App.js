@@ -1,24 +1,27 @@
 import { useEffect, useState } from "react";
 import { Textfit } from "react-textfit";
+import stringMath from "string-math";
 import "./App.css";
 function App() {
-  const [preState, setPreState] = useState("");
   const [curState, setCurState] = useState("");
   const [input, setInput] = useState("0");
   const [operator, setOperator] = useState(null);
-  const [total, setTotal] = useState(false);
+  const [count, setCount] = useState(0);
 
   const inputNum = (e) => {
-    if (input.includes(".") && e.target.innerText === ".") return;
-
-    if (total) {
-      setPreState("");
-    }
-
+    const esponse = curState.split(operator).pop();
+    console.log(esponse);
+    if (input.includes(".") && e.target.innerText === "." && operator == null)
+      return;
+    if (
+      operator !== null &&
+      e.target.innerText === "." &&
+      esponse.includes(".")
+    )
+      return;
     curState
       ? setCurState((pre) => pre + e.target.innerText)
       : setCurState(e.target.innerText);
-    setTotal(false);
   };
 
   useEffect(() => {
@@ -30,11 +33,15 @@ function App() {
   }, []);
 
   const reset = () => {
-    setPreState("");
     setCurState("");
     setInput("0");
+    setCount(0);
   };
-  const minusPlus = (e) => {};
+  const delDigit = (e) => {
+    const charRemove = curState.slice(0, -1);
+    setCurState(charRemove);
+    setInput(charRemove);
+  };
   const percent = (e) => {
     const esponse = curState.split(operator).pop();
     const calc = esponse / 100;
@@ -42,16 +49,42 @@ function App() {
     setInput(replace);
     setCurState(replace);
   };
+  const operatorCheck = (operator) => {
+    if (
+      operator === "/" ||
+      operator === "*" ||
+      operator === "+" ||
+      operator === "-"
+    ) {
+      return true;
+    }
+  };
+
   const operatorType = (e) => {
+    const lastIndex = curState.charAt(curState.length - 1);
+    if (
+      lastIndex === e.target.innerText ||
+      (operatorCheck(lastIndex) === true &&
+        operatorCheck(e.target.innerText) === true)
+    )
+      return;
+    setCount((pre) => pre + 1);
     setOperator(e.target.innerText);
+    if (count >= 1) {
+      setCount((prev) => 1);
+      setInput(stringMath(curState).toString());
+      setCurState(stringMath(curState).toString());
+    }
     curState
       ? setCurState((pre) => pre + e.target.innerText)
       : setCurState(e.target.innerText);
   };
+
   const equals = (e) => {
-    setInput(eval(curState));
-    setCurState(eval(curState));
+    setInput(stringMath(curState).toString());
+    setCurState(stringMath(curState).toString());
   };
+
   return (
     <div className="container">
       <div className="wrapper">
@@ -61,8 +94,8 @@ function App() {
         <div className="btn light-gray" onClick={reset}>
           AC
         </div>
-        <div className="btn light-gray" onClick={minusPlus}>
-          +/-
+        <div className="btn light-gray" onClick={delDigit}>
+          DEL
         </div>
         <div className="btn light-gray" onClick={percent}>
           %
